@@ -6,7 +6,7 @@ const menuAPI: string = 'configuration/appMenu';
 export const getAppMenuData = async (
     loadingOn?: () => void,
     loadingOff?: () => void
-): Promise<MenuRow[] | any> => {
+): Promise<MenuRow[]> => {
     const url = menuAPI;
     const res = await fetchLink({
         address: url,

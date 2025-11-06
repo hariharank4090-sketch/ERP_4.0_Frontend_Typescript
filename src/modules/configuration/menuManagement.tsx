@@ -8,76 +8,9 @@ import { Add, Edit } from '@mui/icons-material';
 import type { MenuRow, MenuPayload, MenuFormState, MenuFormDialogProps, ToastState } from "./types";
 import baseURL from "../../config/baseURL";
 import { getAppMenuData } from "./api";
+import { buildMaps, computeFullPath, buildDepth, computePathSort, collectDescendants } from "../../utils/menuManagement";
 
 const apiPath = 'configuration/appMenu'
-
-// ---------------- helpers (pure) ----------------
-function buildMaps(rows: MenuRow[]) {
-    const byId = new Map<number, MenuRow>();
-    const children = new Map<number | null, MenuRow[]>();
-    console.log(rows)
-    rows.forEach((r) => {
-        byId.set(r.menuId, r);
-        const key = r.parentId ?? null;
-        if (!children.has(key)) children.set(key, []);
-        children.get(key)!.push(r);
-    });
-    return { byId, children };
-}
-
-function computeFullPath(row: MenuRow, byId: Map<number, MenuRow>): string {
-    const parts: string[] = [];
-    let cur: MenuRow | undefined | null = row;
-    const guard = new Set<number>();
-    while (cur) {
-        if (guard.has(cur.menuId)) break; // safety on accidental cycles
-        guard.add(cur.menuId);
-        parts.unshift(cur.slug);
-        cur = cur.parentId ? byId.get(cur.parentId) : null;
-    }
-    return "/" + parts.join("/");
-}
-
-function buildDepth(row: MenuRow, byId: Map<number, MenuRow>): number {
-    let depth = 0;
-    let cur: MenuRow | undefined | null = row;
-    const guard = new Set<number>();
-    while (cur && cur.parentId) {
-        if (guard.has(cur.menuId)) break;
-        guard.add(cur.menuId);
-        depth++;
-        cur = byId.get(cur.parentId);
-    }
-    return depth;
-}
-
-function computePathSort(row: MenuRow, byId: Map<number, MenuRow>): string {
-    const parts: string[] = [];
-    let cur: MenuRow | undefined | null = row;
-    const guard = new Set<number>();
-    while (cur) {
-        if (guard.has(cur.menuId)) break;
-        guard.add(cur.menuId);
-        const so = cur.sortOrder == null ? 1000 : cur.sortOrder;
-        parts.unshift(String(so).padStart(6, "0") + ":" + (cur.slug || ""));
-        cur = cur.parentId ? byId.get(cur.parentId) : null;
-    }
-    return parts.join("/");
-}
-
-function collectDescendants(rootId: number, childrenMap: Map<number | null, MenuRow[]>): Set<number> {
-    const out = new Set<number>();
-    const stack: number[] = [rootId];
-    while (stack.length) {
-        const id = stack.pop()!;
-        const kids = childrenMap.get(id) || [];
-        for (const k of kids) {
-            out.add(k.menuId);
-            stack.push(k.menuId);
-        }
-    }
-    return out; // menuIds
-}
 
 const defaultForm: MenuFormState = {
     menuId: null,

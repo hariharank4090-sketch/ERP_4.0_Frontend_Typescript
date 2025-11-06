@@ -11,13 +11,13 @@ import MainMenuList from './layout/mainMenu';
 import { LoadingScreen } from './components/loadingScreen';
 import type { MenuRow } from './modules/configuration/types';
 import { getAppMenuData } from './modules/configuration/api';
-
+import PageNotFound from './components/404page';
+import { buildMenuTree } from './utils/menuManagement';
 
 function App() {
-    const { token } = useAuth();
+    const { token, setNavDetails } = useAuth();
     const [loading, setLoading] = useState<boolean>(false);
-
-    const [menuData, setMenuData] = useState([]);
+    const [menuData, setMenuData] = useState<MenuRow[]>([]);
 
     async function fetchMenuData(): Promise<MenuRow[] | any> {
         try {
@@ -29,11 +29,18 @@ function App() {
     }
 
     useEffect(() => {
-        fetchMenuData();
+        if (localStorage.getItem('token')) fetchMenuData();
     }, []);
+
+    useEffect(() => {
+        const menuTree = buildMenuTree(menuData.filter(m => Boolean(m.isActive) && Boolean(m.isVisible)));
+        setNavDetails(menuTree);
+    }, [menuData]);
 
     const loadingOn = () => setLoading(true)
     const loadingOff = () => setLoading(false);
+
+    // console.log({ navDetails })
 
     return (
         <>
@@ -48,15 +55,15 @@ function App() {
 
                 {!token && (
                     <Routes>
-                        <Route 
-                            path="*" 
+                        <Route
+                            path="*"
                             element={
-                                <Login 
-                                    loading={loading} 
-                                    loadingOn={loadingOn} 
-                                    loadingOff={loadingOff} 
+                                <Login
+                                    loading={loading}
+                                    loadingOn={loadingOn}
+                                    loadingOff={loadingOff}
                                 />
-                            } 
+                            }
                         />
                     </Routes>
                 )}
@@ -70,27 +77,31 @@ function App() {
                                     path="/"
                                     element={
                                         <MainMenuList
-                                            menuData={menuData}
                                             loading={loading}
-                                            loadingOn={loadingOn} 
+                                            loadingOn={loadingOn}
                                             loadingOff={loadingOff}
                                         />
                                     }
                                 />
 
                                 {appRoutes.map(({ path, component: Component }) => (
-                                    <Route 
-                                        key={path} 
-                                        path={path} 
+                                    <Route
+                                        key={path}
+                                        path={path}
                                         element={
-                                            <Component 
+                                            <Component
                                                 loading={loading}
-                                                loadingOn={loadingOn} 
-                                                loadingOff={loadingOff} 
+                                                loadingOn={loadingOn}
+                                                loadingOff={loadingOff}
                                             />
-                                        } 
+                                        }
                                     />
                                 ))}
+
+                                <Route
+                                    path="*"
+                                    element={<PageNotFound />}
+                                />
 
                             </Routes>
                         </Suspense>

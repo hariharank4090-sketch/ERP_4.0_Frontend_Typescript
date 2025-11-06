@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
+import type { MenuTreeNode } from "../utils/menuManagement";
 
 type User = {
     sub: number;
@@ -13,16 +14,25 @@ type AuthContextType = {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => void;
+    navDetails: MenuTreeNode[];
+    setNavDetails: React.Dispatch<React.SetStateAction<MenuTreeNode[]>>;
+    currentPage: MenuTreeNode | null;
+    setCurrentPage: React.Dispatch<React.SetStateAction<any>>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [token, setToken] = useState<string | null>(() => localStorage.getItem("token"));
+
     const [user, setUser] = useState<User | null>(() => {
         const raw = localStorage.getItem("user");
         return raw ? (JSON.parse(raw) as User) : null;
     });
+
+    const [navDetails, setNavDetails] = useState<MenuTreeNode[]>([]);
+
+    const [currentPage, setCurrentPage] = useState<MenuTreeNode | null>(null);
 
     const login = (newToken: string, newUser: User) => {
         setToken(newToken);
@@ -38,9 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem("user");
     };
 
-    // (Optional) token expiry watch could be added here
-
-    const value = useMemo(() => ({ user, token, login, logout }), [user, token]);
+    const value = useMemo(() => ({ 
+        user, token, 
+        login, logout, 
+        navDetails, setNavDetails, 
+        currentPage, setCurrentPage 
+    }), [user, token, navDetails, currentPage]);
+    
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

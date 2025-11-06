@@ -1,10 +1,18 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/authContext";
 
-const LayoutHeader = () => {
+const LayoutHeader: React.ComponentType<{}> = () => {
     const nav = useNavigate();
+    const { currentPage } = useAuth();
 
     return (
-        <header className="flex items-center justify-between px-5 p-3 shadow" style={{ background: "linear-gradient(180deg,#f7f5f8,#f2fbff)" }}>
+        <header 
+            className="flex items-center justify-between px-5 p-3 shadow-soft-outer" 
+            style={{ 
+                background: "linear-gradient(180deg,#f7f5f8,#f2fbff)", 
+                boxShadow: '0px 0px 8px #f2f2f2' 
+            }}
+        >
 
             <div className="flex items-center gap-4">
                 <div
@@ -14,7 +22,9 @@ const LayoutHeader = () => {
                 </div>
             </div>
 
-            <div className="text-xl font-medium">Dashboard</div>
+            <div className="text-xl font-medium">
+                {currentPage?.title}
+            </div>
 
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">

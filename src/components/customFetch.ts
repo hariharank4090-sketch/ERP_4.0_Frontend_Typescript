@@ -21,15 +21,13 @@ export const fetchLink = async <T = any>({
     loadingOn,
     loadingOff,
 }: FetchLinkParams): Promise<T> => {
-    const storageStr = localStorage.getItem("user");
-    const storage = storageStr ? JSON.parse(storageStr) : null;
-    const token = storage?.Autheticate_Id;
+    const token = localStorage.getItem('token');
 
     const isFormData = bodyData instanceof FormData;
 
     const defaultHeaders: Record<string, string> = {
         "Content-Type": "application/json",
-        Authorization: token ?? "",
+        Authorization: 'Bearer ' + (token || ""),
     };
 
     const finalHeaders = autoHeaders
@@ -46,7 +44,7 @@ export const fetchLink = async <T = any>({
         if (!isFormData) {
             options.body = JSON.stringify(bodyData || {});
         } else {
-            options.body = bodyData as FormData; // FormData should not be stringified
+            options.body = bodyData as FormData;
         }
     }
 
@@ -55,11 +53,17 @@ export const fetchLink = async <T = any>({
 
         const response = await fetch(baseURL + address.replace(/\s+/g, ""), options);
 
+        if (response.status === 401) {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/';
+            return null as T; 
+        }
+
         if (finalHeaders["Content-Type"] === "application/json") {
             const json: T = await response.json();
             return json;
         } else {
-            // Return raw response if not JSON
             return (response as unknown) as T;
         }
     } catch (e) {
