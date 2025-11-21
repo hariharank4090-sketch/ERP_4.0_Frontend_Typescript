@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton, TextField, Button } from "@mui/material";
+import { Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Button } from "@mui/material";
 import { toast } from "react-toastify";
-import { Delete, Edit, Search } from "@mui/icons-material";
-import { fetchLink } from "../../../components/customFetch";
+import { Edit } from "@mui/icons-material";
 import type { PageProps } from "../../../routes/indexRouter";
 import type { Pack } from "../types";
-import { createPack, getPacks, updatePack } from "./packApi";
+import { createPack, getPacks, updatePack } from "./api";
 import DataTable, { createCol } from "../../../components/dataTable";
-import { isNumber, toNumber } from "../../../utils/helper";
-// import FilterableTable, { createCol } from "../../Components/filterableTable2";
+import { toNumber } from "../../../utils/helper";
 
 const initialPackState: Pack = {
     Pack_Id: 0,
@@ -16,7 +14,7 @@ const initialPackState: Pack = {
 };
 
 const PackList: React.ComponentType<PageProps> = ({
-    loading, loadingOff, loadingOn
+    loadingOff, loadingOn
 }) => {
     const [packs, setPacks] = useState<Pack[]>([]);
     const [pack, setPack] = useState<Pack>(initialPackState);
@@ -27,7 +25,7 @@ const PackList: React.ComponentType<PageProps> = ({
 
     async function fetchPackData(): Promise<Pack[] | any> {
         try {
-            const res = await getPacks(loadingOn, loadingOff);
+            const res = await getPacks({ loadingOn, loadingOff });
             setPacks(res);
         } catch (e) {
             console.log(e);
@@ -43,18 +41,28 @@ const PackList: React.ComponentType<PageProps> = ({
         setPack(initialPackState);
     }
 
+    const onSuccess = () => {
+        closeDialog();
+        fetchPackData();
+    }
+
     const savePack = async () => {
         if (!pack.Pack) return toast.warn('Enter Pack');
 
-        const result = await (toNumber(pack.Pack_Id) !== 0 
-            ? updatePack(pack.Pack_Id, pack, loadingOn, loadingOff)
-            : createPack(pack, loadingOn, loadingOff));
-            
-        if (result) {
-            setDialog(pre => ({ ...pre, createDialog: false }));
-            setPack(initialPackState);
-            fetchPackData();
-        } 
+        await (toNumber(pack.Pack_Id) !== 0
+            ? updatePack({
+                id: pack.Pack_Id,
+                bodyData: pack,
+                loadingOn,
+                loadingOff,
+                onSuccess
+            })
+            : createPack({
+                bodyData: pack,
+                loadingOn,
+                loadingOff,
+                onSuccess
+            }));
     }
 
     return (

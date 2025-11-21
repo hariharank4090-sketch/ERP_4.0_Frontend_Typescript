@@ -6,6 +6,7 @@ import {
     Autocomplete, Typography, Dialog, DialogTitle, DialogContent, DialogActions,
     Switch
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { KeyboardArrowDown, KeyboardArrowUp, Settings } from '@mui/icons-material';
 
 type SortDirection = 'asc' | 'desc';
@@ -26,7 +27,6 @@ interface ColumnConfig<T> {
     visible?: boolean;
 }
 
-// AdvancedDataTableProps as defined above...
 interface AdvancedDataTableProps<T extends object> {
     title?: string;
     data: T[];
@@ -49,7 +49,7 @@ interface AdvancedDataTableProps<T extends object> {
     renderFooterContent?: React.ReactNode;
 }
 
-export default function AdvancedDataTable<T extends object>(props: AdvancedDataTableProps<T>) {
+export default function TableComponent<T extends object>(props: AdvancedDataTableProps<T>) {
     const {
         title, data, columns: columnsProp,
         fontSize = 'medium', hoverColor, striped = false,
@@ -59,9 +59,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
         onSettingsChange, renderHeaderContent, renderFooterContent
     } = props;
 
-    // Internal state for dynamic features
     const [columns, setColumns] = useState<ColumnConfig<T>[]>(() =>
-        // initialize column visibility based on prop or default true
         columnsProp.map(col => ({ ...col, visible: col.visible !== false }))
     );
     const [sortModel, setSortModel] = useState<SortRule<T>[]>([]);
@@ -71,15 +69,12 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
     const [page, setPage] = useState(0);
     const [pageSize, setPageSize] = useState(defaultPageSize);
     const [settingsOpen, setSettingsOpen] = useState(false);
-    const [groupBy, setGroupBy] = useState<Array<keyof T>>([]); // grouping columns
-    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());  // track expanded group keys
+    const [groupBy, setGroupBy] = useState<Array<keyof T>>([]); 
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set()); 
+    const theme = useTheme();
 
-    // Effect: if themeMode prop is controlled by parent, we might manage a local state for it or rely on context (omitted here for brevity)
-
-    // Utility: Apply sorting to data
     const sortedData = useMemo(() => {
         if (sortModel.length === 0) return data;
-        // Copy data to sort (to avoid mutating original)
         const dataCopy = [...data];
         dataCopy.sort((a, b) => {
             for (let rule of sortModel) {
@@ -120,7 +115,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                     if (typeof filterVal.max === 'number' && (row[col.key] as any) > filterVal.max) return false;
                     return true;
                 } else if (col.type === 'date' || col.type === 'datetime') {
-                    const cellDate = cellVal instanceof Date ? cellVal : new Date(cellVal);
+                    const cellDate = cellVal instanceof Date ? cellVal : new Date(cellVal as unknown as string | number | Date);
                     if (filterVal.from && cellDate < new Date(filterVal.from)) return false;
                     if (filterVal.to && cellDate > new Date(filterVal.to)) return false;
                     return true;
@@ -135,7 +130,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                 }
             });
         }
-        // Global search filter
         if (globalFilter) {
             const query = globalFilter.toLowerCase();
             result = result.filter(row => {
@@ -202,18 +196,15 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
         return groupRecursively(filteredData, 0);
     }, [filteredData, groupBy, columns]);
 
-    // Determine the final rows to display (groupedData if grouping, else filteredData)
     const displayData = groupedData;
 
-    // Pagination slice
-    const pageCount = pagination ? Math.ceil(displayData.length / pageSize) : 1;
+    // const pageCount = pagination ? Math.ceil(displayData.length / pageSize) : 1;
     const pagedData = useMemo(() => {
         if (!pagination) return displayData;
         const start = page * pageSize;
         return displayData.slice(start, start + pageSize);
     }, [displayData, pagination, page, pageSize]);
 
-    // Unique values for string filters (precompute from original data or filteredData)
     const uniqueColumnValues = useMemo(() => {
         const map: Record<string, any[]> = {};
         columns.forEach(col => {
@@ -228,27 +219,22 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
         return map;
     }, [data, columns]);
 
-    // Event handlers:
     const handleSortClick = (col: ColumnConfig<T>) => {
         if (!col.sortable) return;
-        setPage(0); // reset to first page on sort change
+        setPage(0);
         setSortModel(prev => {
             const existingIndex = prev.findIndex(r => r.field === col.key);
             if (existingIndex >= 0) {
-                // toggle direction or remove
                 const existingRule = prev[existingIndex];
                 if (existingRule.dir === 'asc') {
-                    // switch to desc
                     const newRules = [...prev];
                     newRules[existingIndex] = { field: col.key, dir: 'desc' };
                     return newRules;
                 } else {
-                    // was desc, remove sorting for this column
                     const newRules = prev.filter(r => r.field !== col.key);
                     return newRules;
                 }
             } else {
-                // add as last sort key (multi-sort)
                 return [...prev, { field: col.key, dir: 'asc' }];
             }
         });
@@ -256,7 +242,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
 
     const handleFilterChange = (col: ColumnConfig<T>, value: any) => {
         const colKey = col.key as string;
-        setPage(0); // reset page on filter
+        setPage(0); 
         setFilters(prev => ({ ...prev, [colKey]: value }));
     };
 
@@ -286,20 +272,20 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
     const handleChangePage = (_: any, newPage: number) => {
         setPage(newPage);
     };
+    
     const handleChangePageSize = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newSize = parseInt(e.target.value, 10);
         setPageSize(newSize);
         setPage(0);
     };
 
-    // Options dialog interactions
     const handleToggleColumnVisibility = (colKey: keyof T) => {
         setColumns(prevCols => prevCols.map(c =>
             c.key === colKey ? { ...c, visible: !c.visible } : c
         ));
     };
+
     const handleApplySettings = () => {
-        // If needed, call onSettingsChange with current settings
         onSettingsChange?.({
             pageSize,
             sortModel,
@@ -313,18 +299,15 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
         setSettingsOpen(false);
     };
 
-    // Compute number of visible columns (for colspan in expanded rows etc.)
     const visibleCols = columns.filter(c => c.visible);
     const colCount = visibleCols.length + (expandableRows ? 1 : 0);
 
-    // Determine font size style
     const fontSizePx = typeof fontSize === 'number'
         ? fontSize
         : (fontSize === 'small' ? 12 : fontSize === 'large' ? 18 : 14);
 
     return (
         <Paper sx={{ width: '100%', overflowX: 'auto', typography: 'body2' }}>
-            {/* Header Toolbar */}
             {(title || renderHeaderContent || globalSearch) && (
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="h6">{title}</Typography>
@@ -338,7 +321,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                 sx={{ mr: 2 }}
                             />
                         )}
-                        {renderHeaderContent /* custom header content from props, if any */}
+                        {renderHeaderContent}
                         <IconButton onClick={() => setSettingsOpen(true)}>
                             <Settings />
                         </IconButton>
@@ -346,15 +329,12 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                 </Box>
             )}
 
-            {/* Table Container */}
             <TableContainer sx={{ maxHeight: fixedHeader ? (maxHeight || 400) : undefined, minHeight: minHeight || undefined }}>
                 <Table stickyHeader={fixedHeader} size="small" sx={{ fontSize: fontSizePx }}>
-                    {/* Table Head with sorting and filter rows */}
                     <TableHead>
-                        {/* Column header row */}
                         <TableRow>
-                            {expandableRows && <TableCell /* Empty cell for expand toggle column */ />}
-                            {visibleCols.map((col, index) => (
+                            {expandableRows && <TableCell />}
+                            {visibleCols.map((col) => (
                                 <TableCell key={String(col.key)} sortDirection={
                                     sortModel.find(r => r.field === col.key)?.dir || false
                                 }>
@@ -365,7 +345,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                             onClick={() => handleSortClick(col)}
                                         >
                                             {col.label}
-                                            {/* sort priority number */}
                                             {sortModel.findIndex(r => r.field === col.key) >= 0 && sortModel.length > 1 && (
                                                 <sup>{sortModel.findIndex(r => r.field === col.key) + 1}</sup>
                                             )}
@@ -374,7 +353,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                 </TableCell>
                             ))}
                         </TableRow>
-                        {/* Filter inputs row */}
+
                         <TableRow>
                             {expandableRows && <TableCell />}
                             {visibleCols.map(col => (
@@ -383,7 +362,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                         (() => {
                                             const colKey = col.key as string;
                                             if (col.type === 'string') {
-                                                // Dropdown of unique values
                                                 const options = uniqueColumnValues[colKey] || [];
                                                 return (
                                                     <Autocomplete
@@ -475,7 +453,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                                     </Box>
                                                 );
                                             } else {
-                                                // for custom or other types, just a text search (contains)
                                                 return (
                                                     <TextField
                                                         size="small" placeholder="Search"
@@ -491,23 +468,20 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                         </TableRow>
                     </TableHead>
 
-                    {/* Table Body */}
                     <TableBody>
                         {pagedData.map((row, index) => {
                             if ((row as any).__group) {
-                                // This is a group summary row
                                 const group = row as any;
                                 const level = group.level || 0;
-                                const indent = level * 2; // indentation in px or rem per group level
+                                const indent = level * 2; 
                                 const isExpanded = expandedGroups.has(group.id);
                                 return (
                                     <React.Fragment key={group.id}>
                                         <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
                                             {expandableRows && <TableCell />}
                                             <TableCell colSpan={colCount} sx={{ fontWeight: 'bold', pl: indent }}>
-                                                { /* Group toggle icon */}
                                                 {groupBy.length - 1 === level
-                                                    ? null  // if last level grouping, maybe no toggle needed for final level? 
+                                                    ? null  
                                                     : (
                                                         <IconButton size="small" onClick={() => toggleGroupExpanded(group.id)}>
                                                             {isExpanded ? <KeyboardArrowUp fontSize="small" /> : <KeyboardArrowDown fontSize="small" />}
@@ -515,9 +489,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                                     )
                                                 }
                                                 {String(group.key)}: <strong>{String(group.value)}</strong>
-                                                {/* If count aggregate not explicitly given, we can still show count */}
                                                 <em> ({group.count !== undefined ? group.count : group.rows?.length || 0} items)</em>
-                                                {/* Display aggregates for this group if any */}
                                                 {columns.filter(c => c.aggregate && c.key !== group.key).map(c => {
                                                     const aggVal = group[c.key];
                                                     if (aggVal === undefined) return null;
@@ -532,8 +504,7 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                     </React.Fragment>
                                 );
                             } else {
-                                // Normal data row
-                                const rowId = (row as any).id ?? index; // use an 'id' field if present, otherwise index
+                                const rowId = (row as any).id ?? index;
                                 const isRowExpanded = expandedRows.has(rowId);
                                 return (
                                     <React.Fragment key={rowId}>
@@ -557,14 +528,11 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                                     {col.render
                                                         ? col.render(row)
                                                         : (() => {
-                                                            // If this column is one of the group keys and grouping is active, you might leave it blank in child rows:
                                                             if (groupBy.includes(col.key) && groupBy[0] === col.key) {
-                                                                // For top-level grouped column, skip repeating in data rows
                                                                 return '';
                                                             }
                                                             let value = row[col.key];
                                                             if (col.type === 'number') {
-                                                                // format number
                                                                 value = value == null ? '' : new Intl.NumberFormat('en-IN').format(value as any);
                                                             } else if (col.type === 'date') {
                                                                 value = value ? new Date(value as any).toLocaleDateString('en-GB') : '';
@@ -572,7 +540,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                                                                 const dt = new Date(value as any);
                                                                 value = value ? dt.toLocaleDateString('en-GB') + ' ' + dt.toLocaleTimeString('en-GB') : '';
                                                             } else if (col.type === 'time') {
-                                                                // assume stored as Date or "HH:MM:SS"
                                                                 if (value instanceof Date) {
                                                                     value = (value as Date).toLocaleTimeString('en-US');
                                                                 }
@@ -609,7 +576,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                 </Table>
             </TableContainer>
 
-            {/* Footer with pagination and custom footer content */}
             {(pagination || renderFooterContent) && (
                 <Box sx={{ p: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>{renderFooterContent}</Box>
@@ -627,33 +593,29 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                 </Box>
             )}
 
-            {/* Settings Dialog */}
             <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)}>
                 <DialogTitle>Table Options</DialogTitle>
                 <DialogContent dividers>
-                    {/* Theme toggle */}
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={themeMode === 'dark'}
-                                onChange={() => props.onSettingsChange?.({ themeMode: themeMode === 'dark' ? 'light' : 'dark' }) /* simplified: notify parent */}
+                                onChange={() => props.onSettingsChange?.({ themeMode: themeMode === 'dark' ? 'light' : 'dark' })}
                             />
                         }
                         label="Dark Mode"
                     />
                     <br />
-                    {/* Fixed header toggle */}
                     <FormControlLabel
                         control={
                             <Switch
                                 checked={fixedHeader}
-                                onChange={e => { /* We'll handle via onSettingsChange or local state if needed */ }}
+                                // onChange={e => { /* We'll handle via onSettingsChange or local state if needed */ }}
                             />
                         }
                         label="Fixed Header"
                     />
                     <br />
-                    {/* Page size selection */}
                     {pagination && (
                         <>
                             <Typography gutterBottom>Page Size:</Typography>
@@ -669,21 +631,19 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                         </>
                     )}
                     <br />
-                    {/* Table height sliders */}
                     <Typography gutterBottom>Table Height (px):</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                         <TextField
                             label="Min Height" type="number" size="small"
                             value={minHeight || ''}
-                            onChange={e => {/* update via onSettingsChange or local state */ }}
+                            // onChange={e => {/* update via onSettingsChange or local state */ }}
                         />
                         <TextField
                             label="Max Height" type="number" size="small"
                             value={maxHeight || ''}
-                            onChange={e => {/* update via onSettingsChange or local state */ }}
+                            // onChange={e => {/* update via onSettingsChange or local state */ }}
                         />
                     </Box>
-                    {/* Column visibility toggles */}
                     <Typography gutterBottom>Columns:</Typography>
                     {columns.map(col => (
                         <FormControlLabel
@@ -697,7 +657,6 @@ export default function AdvancedDataTable<T extends object>(props: AdvancedDataT
                             label={col.label}
                         />
                     ))}
-                    {/* Group by options */}
                     {columns.some(col => col.groupable) && (
                         <>
                             <Typography gutterBottom>Group By:</Typography>

@@ -68,9 +68,13 @@ export const onlynumAndNegative = (e: any) => {
     e.target.value = value;
 };
 
-export const isNumber = (num: any): boolean => {
-    return !num ? isNaN(num) ? false : true : false
-}
+export const isNumber = (value: any): boolean => {
+    if (value === null || value === undefined) return false;
+    if (value === '') return false; 
+    
+    return !isNaN(Number(value));
+};
+
 
 export const isObject = (val: any): boolean => {
     return Object.prototype.toString.call(val) === '[object Object]'
@@ -87,10 +91,6 @@ export const isValidJSON = (str: string): boolean => {
 
 export const randomNumber = (range: number = 10000000) => Math.floor(Math.random() * range) + 1;
 
-export const isEqualNumber = (a: number | string, b: number | string): boolean => {
-    return Number(a) === Number(b)
-}
-
 export const toNumber = (value: number | string | null | undefined): number => {
     if (!value) return 0;
     if (typeof value === 'string') {
@@ -99,6 +99,10 @@ export const toNumber = (value: number | string | null | undefined): number => {
     }
     return typeof value === 'number' ? value : 0;
 };
+
+export const isEqualNumber = (a: number | string | any, b: number | string | any): boolean => {
+    return toNumber(a) === toNumber(b)
+}
 
 export const isEqualObject = (obj1: any, obj2: any) => {
     if (obj1 === obj2) {
