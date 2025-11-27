@@ -4,10 +4,13 @@ import { toast } from 'react-toastify';
 
 const packAPI = "masters/packs/";
 
-export const getPacks = async (
+export const getPacks = async ({
+    loadingOn,
+    loadingOff
+}:{
     loadingOn?: () => void,
     loadingOff?: () => void
-): Promise<Pack[]> => {
+}): Promise<Pack[]> => {
     try {
         const res = await fetchLink<Pack>({
             address: packAPI,
@@ -27,24 +30,33 @@ export const getPacks = async (
     }
 };
 
-export const createPack = async (
+export const createPack = async ({
+    bodyData,
+    loadingOn,
+    loadingOff,
+    onSuccess,
+    onError
+}:{
     bodyData: Pack,
-    loadingOn?: () => void,
-    loadingOff?: () => void
-): Promise<boolean> => {
+    loadingOn: () => void,
+    loadingOff: () => void,
+    onSuccess?: () => void,
+    onError?: () => void
+}): Promise<boolean> => {
     try {
         const res = await fetchLink({
             address: packAPI,
             method: "POST",
             bodyData: bodyData,
-            loadingOn: typeof loadingOn === 'function' ? loadingOn : undefined,
-            loadingOff: typeof loadingOff === 'function' ? loadingOff : undefined
+            loadingOn, loadingOff
         });
 
         if (res.success) {
+            if (onSuccess) onSuccess();
             toast.success(res.message);
             return true;
         } else {
+            if (onError) onError();
             toast.error(res.message);
             return false;
         }
@@ -54,25 +66,35 @@ export const createPack = async (
     }
 }
 
-export const updatePack = async (
+export const updatePack = async ({
+    id,
+    bodyData,
+    loadingOn,
+    loadingOff,
+    onSuccess,
+    onError
+}: {
     id: number,
     bodyData: Pack,
-    loadingOn?: () => void,
-    loadingOff?: () => void
-): Promise<boolean> => {
+    loadingOn: () => void,
+    loadingOff: () => void,
+    onSuccess?: () => void,
+    onError?: () => void
+}): Promise<boolean> => {
     try {
         const res = await fetchLink({
-            address: packAPI + '/' + id,
+            address: packAPI + id,
             method: "PUT",
             bodyData: bodyData,
-            loadingOn: typeof loadingOn === 'function' ? loadingOn : undefined,
-            loadingOff: typeof loadingOff === 'function' ? loadingOff : undefined
+            loadingOn, loadingOff
         });
 
         if (res.success) {
+            if (onSuccess) onSuccess();
             toast.success(res.message);
             return true;
         } else {
+            if (onError) onError();
             toast.error(res.message);
             return false;
         }

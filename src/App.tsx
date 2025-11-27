@@ -21,6 +21,7 @@ function App() {
     const { token, setNavDetails } = useAuth();
     const [loading, setLoading] = useState<boolean>(false);
     const [menuData, setMenuData] = useState<MenuRow[]>([]);
+    const localToken = localStorage.getItem('token')
 
     async function fetchMenuData(): Promise<MenuRow[] | any> {
         try {
@@ -33,8 +34,8 @@ function App() {
     }
 
     useEffect(() => {
-        if (localStorage.getItem('token')) fetchMenuData();
-    }, []);
+        if (localToken) fetchMenuData();
+    }, [localToken]);
 
     useEffect(() => {
         const menuTree = buildMenuTree(menuData.filter(m => Boolean(m.isActive) && Boolean(m.isVisible)));

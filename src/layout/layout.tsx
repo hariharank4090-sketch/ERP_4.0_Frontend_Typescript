@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import LayoutHeader from "./header";
 import { useLocation } from "react-router-dom";
 import { findMenuByPath } from "../utils/menuManagement";
@@ -10,7 +10,7 @@ const AppLayout: React.ComponentType<{
     loading: boolean,
     loadingOn: () => void,
     loadingOff: () => void
-}> = ({ children, loading = false, loadingOn, loadingOff }) => {
+}> = ({ children }) => {
     const { navDetails, setCurrentPage } = useAuth();
 
     const location = useLocation();

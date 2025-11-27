@@ -19,9 +19,9 @@ export interface componentRoute<P = any> {
 }
 
 export interface PageProps {
-    loading?: boolean;
-    loadingOn?: () => void;
-    loadingOff?: () => void;
+    loading: boolean;
+    loadingOn: () => void;
+    loadingOff: () => void;
 }
 
 const configuration: componentRoute[] = configurationRoutePath.map(

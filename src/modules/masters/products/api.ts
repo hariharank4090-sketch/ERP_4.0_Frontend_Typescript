@@ -1,70 +1,152 @@
 import { fetchLink } from "../../../components/customFetch";
 import type { Product } from "../types";
 
-export function listProducts(): Promise<Product[]> {
-    return fetchLink<Product[]>({
-        address: "/api/products",
+const productApi = 'masters/products';
+
+export const listProduct = async ({
+    loadingOn,
+    loadingOff
+}: {
+    loadingOn?: () => void,
+    loadingOff?: () => void
+}): Promise<Product[]> => {
+    const req = await fetchLink<Product>({
+        address: productApi,
         method: "GET",
+        loadingOn, loadingOff
     });
+
+    if (req.success) {
+        return req.data;
+    } else {
+        return []
+    };
 }
 
-export function getProduct(id: number): Promise<Product> {
-    return fetchLink<Product>({
-        address: `/api/products/${id}`,
+export const getProduct = async ({
+    id,
+    loadingOn,
+    loadingOff
+}: {
+    id: number,
+    loadingOn?: () => void,
+    loadingOff?: () => void
+}): Promise<Product[]> => {
+    const req = await fetchLink<Product>({
+        address: `${productApi}/${id}`,
         method: "GET",
+        loadingOn, loadingOff
     });
+
+    if (req.success) {
+        return req.data;
+    } else {
+        return []
+    };
 }
 
-export function createProduct(
+export const createProduct = async ({
+    data,
+    image,
+    loadingOn,
+    loadingOff,
+    onSuccess,
+    onError
+}: {
     data: Record<string, any>,
     image?: File | null,
-    loading?: { on?: () => void; off?: () => void }
-): Promise<Product> {
+    loadingOn?: () => void,
+    loadingOff?: () => void,
+    onSuccess?: () => void,
+    onError?: () => void
+}): Promise<boolean> => {
     const form = new FormData();
     Object.entries(data).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") form.append(k, String(v));
     });
     if (image) form.append("image", image);
 
-    return fetchLink<Product>({
-        address: "/api/products",
+    const req = await fetchLink({
+        address: productApi,
         method: "POST",
         bodyData: form,
-        // autoHeaders can stay false — we removed content-type automatically for FormData
-        loadingOn: loading?.on,
-        loadingOff: loading?.off,
+        loadingOn, loadingOff,
     });
+
+    if (req.success) {
+        if (onSuccess) onSuccess();
+        return true;
+    } else {
+        if (onError) onError();
+        return false;
+    }
 }
 
-export function updateProduct(
-    id: number,
-    data: Record<string, any>,
-    image?: File | null,
-    loading?: { on?: () => void; off?: () => void }
-): Promise<Product> {
+export const updateProduct = async ({
+    data,
+    id,
+    image,
+    loadingOn,
+    loadingOff,
+    onSuccess,
+    onError
+}: {
+    data: Record<string, any>;
+    id: number;
+    image?: File | null;
+    loadingOn?: () => void;
+    loadingOff?: () => void;
+    onSuccess?: () => void;
+    onError?: () => void;
+}): Promise<boolean> => {
     const form = new FormData();
     Object.entries(data).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") form.append(k, String(v));
     });
     if (image) form.append("image", image);
 
-    return fetchLink<Product>({
-        address: `/api/products/${id}`,
+    const req = await fetchLink<Product>({
+        address: `${productApi}/${id}`,
         method: "PUT",
         bodyData: form,
-        loadingOn: loading?.on,
-        loadingOff: loading?.off,
+        loadingOn,
+        loadingOff,
     });
+
+    if (req.success) {
+        if (onSuccess) onSuccess();
+        return true;
+    } else {
+        if (onError) onError();
+        return false;
+    }
 }
 
-export function deleteProduct(
+export const deleteProduct = async ({
+    id,
+    loadingOn,
+    loadingOff,
+    onSuccess,
+    onError
+}: {
     id: number,
-    loading?: { on?: () => void; off?: () => void }
-) {
-    return fetchLink({
-        address: `/api/products/${id}`,
+    loadingOn?: () => void,
+    loadingOff?: () => void,
+    onSuccess?: () => void,
+    onError?: () => void
+}): Promise<boolean> => {
+    const req = await fetchLink({
+        address: `${productApi}/${id}`,
         method: "DELETE",
-        loadingOn: loading?.on,
-        loadingOff: loading?.off,
+        loadingOn,
+        loadingOff,
     });
+
+    if (req.success) {
+        if (onSuccess) onSuccess();
+        return true;
+    } else {
+        if (onError) onError();
+        return false;
+    }
 }

@@ -51,7 +51,7 @@ export interface FilterableTableProps {
     tableMaxHeight?: number;
     initialPageCount?: number;
     EnableSerialNumber?: boolean;
-    CellSize?: 'small' | 'medium' | 'large';
+    CellSize?: 'small' | 'medium';
     disablePagination?: boolean;
     title?: string;
     PDFPrintOption?: boolean;
@@ -341,7 +341,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                 <TableRow>
                     {isExpendable === true && expandableComp && (
                         <TableCell
-                            className="border-r text-center align-top"
+                            className="border-r border-gray-300 text-center align-top"
                             sx={{ fontSize: `${bodyFontSizePx}px` }}
                         >
                             <IconButton size="small" onClick={() => setOpen((pre) => !pre)}>
@@ -356,7 +356,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
 
                     {EnableSerialNumber === true && (
                         <TableCell
-                            className="border-r text-center align-top"
+                            className="border-r border-gray-300 text-center align-top"
                             sx={{ fontSize: `${bodyFontSizePx}px` }}
                         >
                             {rowsPerPage * page + index + 1}
@@ -391,7 +391,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                             return (
                                 <TableCell
                                     key={columnInd}
-                                    className={`border-r ${horizondalalignClass} ${verticalAlignClass} ${tdClass(
+                                    className={`border-r border-gray-300 ${horizondalalignClass} ${verticalAlignClass} ${tdClass(
                                         row,
                                         column.Field_Name,
                                         index
@@ -412,7 +412,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                             return (
                                 <TableCell
                                     key={columnInd}
-                                    className={`border-r ${horizondalalignClass} ${verticalAlignClass} ${tdClass(
+                                    className={`border-r border-gray-300 ${horizondalalignClass} ${verticalAlignClass} ${tdClass(
                                         row,
                                         column.Field_Name,
                                         index
@@ -428,7 +428,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                             <TableCell
                                 key={columnInd}
                                 sx={{ fontSize: `${bodyFontSizePx}px` }}
-                                className={`border-r ${horizondalalignClass} ${verticalAlignClass}`}
+                                className={`border-r border-gray-300 ${horizondalalignClass} ${verticalAlignClass}`}
                             >
                                 -
                             </TableCell>
@@ -510,7 +510,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                         <TableRow>
                             {isExpendable && expandableComp && (
                                 <TableCell
-                                    className="font-semibold border-r text-center"
+                                    className="font-semibold border-r border-gray-300 text-center"
                                     sx={{ fontSize: `${headerFontSizePx}px`, backgroundColor: '#EDF0F7' }}
                                 >
                                     #
@@ -519,7 +519,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
 
                             {EnableSerialNumber && (
                                 <TableCell
-                                    className="font-semibold border-r text-center"
+                                    className="font-semibold border-r border-gray-300 text-center"
                                     sx={{ fontSize: `${headerFontSizePx}px`, backgroundColor: '#EDF0F7' }}
                                 >
                                     SNo
@@ -544,7 +544,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                                         <TableCell
                                             key={ke}
                                             className={
-                                                'font-semibold border-r ' +
+                                                'font-semibold border-r border-gray-300 ' +
                                                 (column.align
                                                     ? columnAlign.find(
                                                         (align) => align.type === String(column.align).toLowerCase()
@@ -567,7 +567,7 @@ const FilterableTable: React.FC<FilterableTableProps> = ({
                                             key={ke}
                                             className={
                                                 `${(column.ColumnHeader || column?.Field_Name)
-                                                    ? 'font-semibold border-r px-2 py-1'
+                                                    ? 'font-semibold border-r border-gray-300 px-2 py-1'
                                                     : 'p-0'
                                                 } ` +
                                                 (column.align
